@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>짤·카드 스튜디오</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Pretendard:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#191f28;
+    --paper:#ffffff;
+    --panel:#f2f4f6;
+    --line:#e5e8eb;
+    --accent:#0064ff;
+    --accent-2:#e8f1ff;
+    --focus:#0064ff;
+    --ok:#00c285;
+    --err:#f04452;
+    --muted:#6b7684;
+    font-family: 'Pretendard', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  header{
+    padding:28px 24px 16px;
+    border-bottom:1px solid var(--line);
+  }
+  header h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:28px;
+    margin:0 0 4px;
+    letter-spacing:-0.02em;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(280px,420px) 1fr;
+    gap:20px;
+    padding:20px;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  @media (max-width:820px){
+    .layout{grid-template-columns:1fr;}
+  }
+  .stage{
+    background:var(--panel);
+    border:none;
+    box-shadow:0 2px 10px rgba(25,31,40,0.06);
+    border-radius:20px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+  .ratio-tabs{
+    display:flex;
+    gap:6px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    padding:4px;
+    border-radius:999px;
+  }
+  .ratio-tabs button{
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    padding:6px 16px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Space Grotesk', sans-serif;
+  }
+  .ratio-tabs button.active{
+    background:var(--accent);
+    color:#ffffff;
+  }
+  #stageCanvas{
+    max-width:100%;
+    max-height:520px;
+    background:
+      linear-gradient(45deg,#e5e8eb 25%,transparent 25%),
+      linear-gradient(-45deg,#e5e8eb 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#e5e8eb 75%),
+      linear-gradient(-45deg,transparent 75%,#e5e8eb 75%);
+    background-color:#ffffff;
+    background-size:20px 20px;
+    background-position:0 0,0 10px,10px -10px,-10px 0px;
+    border:1px solid var(--line);
+    border-radius:0px;
+    touch-action:none;
+    cursor:grab;
+  }
+  .hint{
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+  }
+  .panel{
+    background:var(--panel);
+    border:none;
+    box-shadow:0 2px 10px rgba(25,31,40,0.06);
+    border-radius:20px;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .block h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size:15px;
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .block h2::before{
+    content:"";
+    width:8px;height:8px;
+    background:var(--accent);
+    display:inline-block;
+    border-radius:2px;
+  }
+  .current-tpl{
+    font-family:'Pretendard', sans-serif;
+    font-weight:400;
+    font-size:12px;
+    color:var(--accent);
+    margin-left:2px;
+  }
+  .dropzone{
+    border:2px dashed var(--line);
+    border-radius:16px;
+    padding:28px 16px;
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    transition:border-color .15s, background-color .15s;
+    background-color: #ffffff;
+  }
+  .dropzone.drag-over{border-color:var(--accent);background:var(--accent-2);}
+  .dropzone-text{
+    margin:0;
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .dropzone-hint{
+    font-size:11px;
+    color:var(--muted);
+  }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+    margin-bottom:10px;
+  }
+  .field label{
+    font-size:12px;
+    color:var(--muted);
+    display:flex;
+    justify-content:space-between;
+  }
+  textarea, input[type=text], input[type=range], input[type=color], select{
+    font-family:inherit;
+    font-size:14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  textarea:focus, input[type=text]:focus, select:focus{
+    outline:2px solid var(--focus);
+    outline-offset:1px;
+  }
+  input[type=range]{
+    --fill:50%;
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:6px;
+    border-radius:999px;
+    background:linear-gradient(to right, #7fb0ff 0%, var(--accent) var(--fill), var(--line) var(--fill), var(--line) 100%);
+    border:none;
+    padding:0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 1px 4px rgba(0,100,255,0.4);
+    cursor:pointer;
+    border:none;
+  }
+  input[type=range]::-moz-range-track{
+    height:6px;
+    border-radius:999px;
+    background:var(--line);
+  }
+  input[type=range]::-moz-range-progress{
+    height:6px;
+    border-radius:999px;
+    background:linear-gradient(to right, #7fb0ff, var(--accent));
+  }
+  input[type=range]::-moz-range-thumb{
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 1px 4px rgba(0,100,255,0.4);
+    cursor:pointer;
+    border:none;
+  }
+  textarea{resize:vertical;min-height:56px;}
+  input[type=range]{padding:0;}
+  .row{display:flex;gap:8px;}
+  .row > *{flex:1;}
+  .color-picker{position:relative;display:inline-block;}
+  .color-swatch{
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    cursor:pointer;
+    padding:0;
+  }
+  .color-panel{
+    position:absolute;
+    top:44px;
+    left:0;
+    z-index:20;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    box-shadow:0 8px 24px rgba(25,31,40,0.14);
+    padding:14px;
+    width:200px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .color-panel[hidden] { display: none !important; }
+  .color-panel .field{margin-bottom:0;}
+  .color-panel .row{gap:6px;}
+  .color-panel input[type=number]{width:100%;padding:6px;text-align:center;}
+  .color-panel input[type=text]{width:100%;text-transform:uppercase;}
+  #svCanvas{
+    width:100%;
+    height:140px;
+    border-radius:8px;
+    cursor:crosshair;
+    display:block;
+  }
+  input.hue-slider{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:10px;
+    border-radius:999px;
+    background:linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+    border:none;
+    padding:0;
+  }
+  input.hue-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    appearance:none;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#fff;
+    border:2px solid var(--line);
+    box-shadow:0 1px 4px rgba(0,0,0,0.3);
+    cursor:pointer;
+  }
+  input.hue-slider::-moz-range-thumb{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#fff;
+    border:2px solid var(--line);
+    box-shadow:0 1px 4px rgba(0,0,0,0.3);
+    cursor:pointer;
+  }
+  input.hue-slider::-moz-range-track{
+    height:10px;
+    border-radius:999px;
+    background:transparent;
+  }
+  .btn{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    padding:9px 14px;
+    border-radius:12px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .btn:hover{background:var(--accent-2);border-color:var(--accent-2);}
+  .btn:disabled{
+    opacity:0.45;
+    cursor:not-allowed;
+    background:var(--paper);
+    border-color:var(--line);
+    color:var(--muted);
+  }
+  .btn:disabled:hover{background:var(--paper);border-color:var(--line);}
+  .btn.primary{
+    background:var(--accent);
+    color:#ffffff;
+    border-color:var(--accent);
+  }
+  .btn.primary:hover{background:#0052d6;border-color:#0052d6;}
+  .btn.small{padding:5px 10px;font-size:12px;}
+  .msg{
+    font-size:12px;
+    padding:8px 10px;
+    border-radius:8px;
+    display:none;
+  }
+  .msg.show{display:block;}
+  .msg.err{background:#feecee;color:var(--err);}
+  .msg.ok{background:#e5faf3;color:var(--ok);}
+  .tpl-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:220px;
+    overflow-y:auto;
+  }
+  .tpl-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:6px 8px;
+  }
+  .tpl-thumb{
+    width:36px;height:36px;
+    object-fit:cover;
+    border-radius:8px;
+    background:var(--line);
+    flex-shrink:0;
+    border:1px solid var(--line);
+  }
+  .tpl-name{
+    flex:1;
+    font-size:13px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .tpl-empty{
+    font-size:12px;
+    color:var(--muted);
+    padding:8px 0;
+  }
+  .json-row{display:flex;gap:8px;}
+  footer{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    padding:24px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>짤·카드 스튜디오</h1>
+  <p>이미지와 문구를 조합해 밈·카드·SNS 이미지를 만들고 내려받으세요.</p>
+</header>
+
+<div class="layout">
+
+  <div class="stage">
+    <div class="ratio-tabs" id="ratioTabs">
+      <button data-ratio="1:1" class="active">1:1</button>
+      <button data-ratio="4:5">4:5</button>
+      <button data-ratio="9:16">9:16</button>
+    </div>
+    <canvas id="stageCanvas"></canvas>
+    <div class="hint">캔버스에서 문구를 드래그해 위치를 바꿀 수 있어요</div>
+    <button class="btn primary" id="downloadBtn" style="width:100%">이미지 내려받기 (PNG)</button>
+    <div class="msg" id="stageMsg"></div>
+  </div>
+
+  <div class="panel">
+
+    <div class="block">
+      <h2>이미지 불러오기</h2>
+      <div class="dropzone" id="dropzone">
+        <p class="dropzone-text">이미지를 드래그 앤 드롭하거나<br>찾아서 업로드하세요.</p>
+        <button type="button" class="btn primary" id="uploadBtn">사진 업로드</button>
+        <div class="dropzone-hint">PNG, JPEG 파일만 가능 · 다른 형식은 거부됩니다</div>
+        <input type="file" id="fileInput" accept="image/png,image/jpeg" style="display:none">
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>문구</h2>
+      <div class="field">
+        <label>내용</label>
+        <textarea id="textInput" placeholder="여기에 문구를 입력하세요"></textarea>
+      </div>
+      <div class="field">
+        <label><span>글자 크기</span><span id="sizeVal">60</span></label>
+        <input type="range" id="sizeInput" min="20" max="160" value="60">
+      </div>
+      <div class="row">
+        <div class="field">
+          <label><span>가로 위치</span><span id="xVal">50</span>%</label>
+          <input type="range" id="xInput" min="0" max="100" value="50">
+        </div>
+        <div class="field">
+          <label><span>세로 위치</span><span id="yVal">85</span>%</label>
+          <input type="range" id="yInput" min="0" max="100" value="85">
+        </div>
+      </div>
+      <div class="field">
+        <label>색상</label>
+        <div class="dropzone-hint" style="margin:-2px 0 2px;">문구 일부를 드래그로 선택한 뒤 색을 고르면 그 부분만 바뀌어요</div>
+        <div class="color-picker">
+          <button type="button" class="color-swatch" id="colorSwatch"></button>
+          <div class="color-panel" id="colorPanel" hidden>
+            <canvas id="svCanvas" width="200" height="140"></canvas>
+            <input type="range" id="hueInput" class="hue-slider" min="0" max="360" value="0">
+            <div class="field">
+              <label>HEX</label>
+              <input type="text" id="hexInput" maxlength="7">
+            </div>
+            <div class="row">
+              <div class="field"><label>R</label><input type="number" id="rInput" min="0" max="255"></div>
+              <div class="field"><label>G</label><input type="number" id="gInput" min="0" max="255"></div>
+              <div class="field"><label>B</label><input type="number" id="bInput" min="0" max="255"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>텍스트 스타일</h2>
+      <div class="field">
+        <label>폰트</label>
+        <select id="fontSelect">
+          <option value="Space Grotesk">Space Grotesk (기본)</option>
+          <option value="Pretendard">Pretendard</option>
+          <option value="Georgia">Georgia</option>
+        </select>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label><span>외곽선 두께</span><span id="strokeWidthVal">0</span></label>
+          <input type="range" id="strokeWidthInput" min="0" max="10" value="0">
+        </div>
+        <div class="field">
+          <label>외곽선 색상</label>
+          <input type="color" id="strokeColorInput" value="#ffffff">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label><span>그림자 정도</span><span id="shadowStrengthVal">0</span></label>
+          <input type="range" id="shadowStrengthInput" min="0" max="20" value="0">
+        </div>
+        <div class="field">
+          <label>그림자 색상</label>
+          <input type="color" id="shadowColorInput" value="#000000">
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <h2>템플릿 <span class="current-tpl" id="currentTplLabel"></span></h2>
+      <div class="msg" id="tplActionMsg"></div>
+      <div class="row">
+        <input type="text" id="tplNameInput" placeholder="템플릿 이름">
+        <button class="btn small" id="saveTplBtn">현재 저장</button>
+      </div>
+      <div class="tpl-list" id="tplList"><div class="tpl-empty">저장된 템플릿이 없습니다</div></div>
+    </div>
+
+    <div class="block">
+      <h2>백업 (JSON)</h2>
+      <div class="json-row">
+        <button class="btn small" id="exportJsonBtn">템플릿 내보내기</button>
+        <label class="btn small" style="cursor:pointer;">
+          템플릿 가져오기
+          <input type="file" id="importJsonInput" accept="application/json" style="display:none">
+        </label>
+      </div>
+      <div class="msg" id="tplMsg"></div>
+    </div>
+
+  </div>
+</div>
+
+<footer>메타데이터·위치정보는 저장하지 않으며, 모든 편집은 이 브라우저 세션의 저장소에만 보관됩니다.</footer>
+
+<script>
+// window.storage is only injected inside the Claude.ai artifact preview.
+// When this file is opened on its own (double-clicked, Live Server, GitHub
+// Pages, etc.) that object doesn't exist, so we fall back to localStorage
+// with the same get/set/delete/list interface.
+const storage = window.storage ? window.storage : {
+  async get(key, shared){
+    const raw = localStorage.getItem(key);
+    if(raw === null) throw new Error('not found');
+    return { key, value: raw, shared: !!shared };
+  },
+  async set(key, value, shared){
+    localStorage.setItem(key, value);
+    return { key, value, shared: !!shared };
+  },
+  async delete(key, shared){
+    localStorage.removeItem(key);
+    return { key, deleted:true, shared: !!shared };
+  },
+  async list(prefix, shared){
+    const keys = [];
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!prefix || k.startsWith(prefix)) keys.push(k);
+    }
+    return { keys, prefix, shared: !!shared };
+  },
+};
+
+const RATIOS = {
+  '1:1': {w:1080, h:1080},
+  '4:5': {w:1080, h:1350},
+  '9:16': {w:1080, h:1920},
+};
+
+const state = {
+  ratio: '1:1',
+  img: null,
+  imgDataURL: null,
+  text: '',
+  fontSize: 60,
+  x: 50,
+  y: 85,
+  color: '#000000',
+  colorRanges: [], // [{start, end, color}] — 선택 영역별 색상 오버라이드
+  fontFamily: 'Space Grotesk',
+  strokeColor: '#ffffff',
+  strokeWidth: 0,      // 0 = 외곽선 없음
+  shadowColor: '#000000',
+  shadowStrength: 0,   // 0 = 그림자 없음
+};
+
+// 구버전 템플릿(텍스트 스타일 필드가 없는)을 불러올 때 사용할 기본값
+const TEXT_STYLE_DEFAULTS = {
+  fontFamily: 'Space Grotesk',
+  strokeColor: '#ffffff',
+  strokeWidth: 0,
+  shadowColor: '#000000',
+  shadowStrength: 0,
+};
+
+const canvas = document.getElementById('stageCanvas');
+const ctx = canvas.getContext('2d');
+
+const els = {
+  ratioTabs: document.getElementById('ratioTabs'),
+  fileInput: document.getElementById('fileInput'),
+  dropzone: document.getElementById('dropzone'),
+  uploadBtn: document.getElementById('uploadBtn'),
+  textInput: document.getElementById('textInput'),
+  sizeInput: document.getElementById('sizeInput'),
+  sizeVal: document.getElementById('sizeVal'),
+  xInput: document.getElementById('xInput'),
+  xVal: document.getElementById('xVal'),
+  yInput: document.getElementById('yInput'),
+  yVal: document.getElementById('yVal'),
+  colorSwatch: document.getElementById('colorSwatch'),
+  colorPanel: document.getElementById('colorPanel'),
+  svCanvas: document.getElementById('svCanvas'),
+  hueInput: document.getElementById('hueInput'),
+  hexInput: document.getElementById('hexInput'),
+  rInput: document.getElementById('rInput'),
+  gInput: document.getElementById('gInput'),
+  bInput: document.getElementById('bInput'),
+  fontSelect: document.getElementById('fontSelect'),
+  strokeWidthInput: document.getElementById('strokeWidthInput'),
+  strokeWidthVal: document.getElementById('strokeWidthVal'),
+  strokeColorInput: document.getElementById('strokeColorInput'),
+  shadowStrengthInput: document.getElementById('shadowStrengthInput'),
+  shadowStrengthVal: document.getElementById('shadowStrengthVal'),
+  shadowColorInput: document.getElementById('shadowColorInput'),
+  downloadBtn: document.getElementById('downloadBtn'),
+  stageMsg: document.getElementById('stageMsg'),
+  tplNameInput: document.getElementById('tplNameInput'),
+  saveTplBtn: document.getElementById('saveTplBtn'),
+  tplList: document.getElementById('tplList'),
+  currentTplLabel: document.getElementById('currentTplLabel'),
+  tplActionMsg: document.getElementById('tplActionMsg'),
+  exportJsonBtn: document.getElementById('exportJsonBtn'),
+  importJsonInput: document.getElementById('importJsonInput'),
+  tplMsg: document.getElementById('tplMsg'),
+};
+
+function showMsg(el, text, type){
+  el.textContent = text;
+  el.className = 'msg show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(()=>{ el.className='msg'; }, 4000);
+}
+
+// ---------- drawing ----------
+
+// Wraps text into lines of word-tokens, each token keeping its original
+// character index range in state.text so color ranges can be looked up
+// per word (and per character, for long words that get char-broken).
+function buildWrappedLines(context, text, maxWidth){
+  const spaceWidth = context.measureText(' ').width;
+  const lines = [];
+  let globalIdx = 0;
+  const paragraphs = text.split('\n');
+
+  paragraphs.forEach((para)=>{
+    if(para === ''){
+      lines.push([]);
+    } else {
+      const tokens = para.split(' '); // '' entries mark extra consecutive spaces
+      let currentLine = [];
+      let currentWidth = 0;
+      let localIdx = globalIdx;
+      let pendingSpaces = 0; // spaces seen since the last real word
+
+      tokens.forEach((token)=>{
+        if(token === ''){
+          pendingSpaces += 1;
+          localIdx += 1;
+          return;
+        }
+
+        const wordStart = localIdx;
+        const wordEnd = wordStart + token.length;
+        // gapBefore = actual number of space characters immediately
+        // preceding this word (only meaningful if it lands mid-line)
+        const gapBefore = currentLine.length ? pendingSpaces + 1 : 0;
+        const gapWidth = gapBefore * spaceWidth;
+
+        if(token !== ''){
+          const wWidth = context.measureText(token).width;
+          if(wWidth <= maxWidth){
+            const testWidth = currentWidth + gapWidth + wWidth;
+            if(testWidth <= maxWidth || currentLine.length === 0){
+              currentLine.push({text:token, start:wordStart, end:wordEnd, gapBefore});
+              currentWidth = testWidth;
+            } else {
+              lines.push(currentLine);
+              currentLine = [{text:token, start:wordStart, end:wordEnd, gapBefore:0}];
+              currentWidth = wWidth;
+            }
+          } else {
+            if(currentLine.length){ lines.push(currentLine); currentLine = []; currentWidth = 0; }
+            let chunkStart = wordStart;
+            let cur = '';
+            let charIdx = wordStart;
+            for(const ch of Array.from(token)){
+              const attempt = cur + ch;
+              if(context.measureText(attempt).width <= maxWidth || cur === ''){
+                cur = attempt;
+              } else {
+                lines.push([{text:cur, start:chunkStart, end:chunkStart+cur.length, gapBefore:0}]);
+                chunkStart = charIdx;
+                cur = ch;
+              }
+              charIdx += ch.length;
+            }
+            if(cur !== ''){
+              currentLine = [{text:cur, start:chunkStart, end:chunkStart+cur.length, gapBefore:0}];
+              currentWidth = context.measureText(cur).width;
+            }
+          }
+        }
+        pendingSpaces = 0;
+        localIdx = wordEnd + 1; // +1 for the delimiter space consumed by split(' ')
+      });
+
+      if(currentLine.length) lines.push(currentLine);
+    }
+    globalIdx += para.length + 1; // +1 for the '\n' consumed between paragraphs
+  });
+
+  return lines;
+}
+
+// Builds a flat list of {start, end, color} runs covering the whole text,
+// merging the base color with any explicit selection color overrides.
+function getColorRuns(textLength, ranges, baseColor){
+  const runs = [];
+  const sorted = [...ranges].sort((a,b)=> a.start - b.start);
+  let cursor = 0;
+  for(const r of sorted){
+    const s = Math.max(0, Math.min(textLength, r.start));
+    const e = Math.max(0, Math.min(textLength, r.end));
+    if(e <= s) continue;
+    if(s > cursor) runs.push({start:cursor, end:s, color:baseColor});
+    runs.push({start:s, end:e, color:r.color});
+    cursor = Math.max(cursor, e);
+  }
+  if(cursor < textLength) runs.push({start:cursor, end:textLength, color:baseColor});
+  return runs;
+}
+
+function splitByColorRuns(start, end, runs){
+  const segments = [];
+  for(const r of runs){
+    const s = Math.max(start, r.start);
+    const e = Math.min(end, r.end);
+    if(s < e) segments.push({start:s, end:e, color:r.color});
+  }
+  return segments;
+}
+
+function measureLineWidth(context, line, spaceWidth){
+  let w = 0;
+  line.forEach((word, i)=>{
+    w += context.measureText(word.text).width;
+    if(i < line.length - 1) w += (line[i+1].gapBefore || 1) * spaceWidth;
+  });
+  return w;
+}
+
+function draw(){
+  const {w, h} = RATIOS[state.ratio];
+  canvas.width = w;
+  canvas.height = h;
+
+  ctx.clearRect(0,0,w,h);
+
+  if(state.img){
+    const ir = state.img.width / state.img.height;
+    const cr = w / h;
+    let sx, sy, sw, sh;
+    if(ir > cr){
+      sh = state.img.height;
+      sw = sh * cr;
+      sx = (state.img.width - sw) / 2;
+      sy = 0;
+    } else {
+      sw = state.img.width;
+      sh = sw / cr;
+      sx = 0;
+      sy = (state.img.height - sh) / 2;
+    }
+    ctx.drawImage(state.img, sx, sy, sw, sh, 0, 0, w, h);
+  } else {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#a4acb8';
+    ctx.font = '40px Pretendard, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('이미지를 불러오세요', w/2, h/2);
+  }
+
+  if(state.text){
+    const fontPx = state.fontSize * (w/1080);
+    ctx.font = `700 ${fontPx}px '${state.fontFamily}', Pretendard, sans-serif`;
+
+    const margin = 16 * (w/1080);
+    const maxWidth = w * 0.88;
+    const spaceWidth = ctx.measureText(' ').width;
+    const lines = buildWrappedLines(ctx, state.text, maxWidth);
+    const lineHeight = fontPx * 1.2;
+    const totalHeight = lines.length * lineHeight;
+    const colorRuns = getColorRuns(state.text.length, state.colorRanges, state.color);
+
+    // widest actual line (used to keep text horizontally inside the canvas
+    // even when it's shorter than maxWidth)
+    let blockWidth = 0;
+    for(const line of lines){
+      blockWidth = Math.max(blockWidth, measureLineWidth(ctx, line, spaceWidth));
+    }
+
+    // desired position from the sliders
+    let cx = w * (state.x/100);
+    let topY = h * (state.y/100) - totalHeight/2;
+
+    // clamp horizontally so the widest line never spills past the canvas edge
+    const halfBlock = Math.min(blockWidth/2, (w - margin*2)/2);
+    cx = Math.max(margin + halfBlock, Math.min(w - margin - halfBlock, cx));
+
+    // clamp vertically so the whole text block stays inside the canvas
+    const maxTop = Math.max(margin, h - margin - totalHeight);
+    topY = Math.max(margin, Math.min(maxTop, topY));
+
+    let cy = topY + lineHeight*0.8;
+    ctx.textAlign = 'left';
+    const leftX = cx - blockWidth/2; // same left edge for every line
+
+    // 그림자는 stroke+fill 전체에 한 번만 적용되도록 텍스트를 그리기 전에 설정
+    if(state.shadowStrength > 0){
+      ctx.shadowColor = state.shadowColor;
+      ctx.shadowBlur = state.shadowStrength * 1.4 * (w/1080);
+      ctx.shadowOffsetX = state.shadowStrength * 0.5 * (w/1080);
+      ctx.shadowOffsetY = state.shadowStrength * 0.5 * (w/1080);
+    } else {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+
+    if(state.strokeWidth > 0){
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeStyle = state.strokeColor;
+      ctx.lineWidth = state.strokeWidth * (w/1080);
+    }
+
+    for(const line of lines){
+      let xCursor = leftX;
+      line.forEach((word, i)=>{
+        const segments = splitByColorRuns(word.start, word.end, colorRuns);
+        segments.forEach(seg=>{
+          const segText = state.text.slice(seg.start, seg.end);
+          if(state.strokeWidth > 0) ctx.strokeText(segText, xCursor, cy);
+          ctx.fillStyle = seg.color;
+          ctx.fillText(segText, xCursor, cy);
+          xCursor += ctx.measureText(segText).width;
+        });
+        if(i < line.length - 1) xCursor += (line[i+1].gapBefore || 1) * spaceWidth;
+      });
+      cy += lineHeight;
+    }
+
+    // 이후 배경 등 다른 요소에 그림자가 번지지 않도록 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+  }
+}
+
+// ---------- controls ----------
+
+els.ratioTabs.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  [...els.ratioTabs.children].forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  state.ratio = btn.dataset.ratio;
+  draw();
+});
+
+function updateSliderFill(input){
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 100);
+  const pct = ((Number(input.value) - min) / (max - min)) * 100;
+  input.style.setProperty('--fill', pct + '%');
+}
+
+function updateUIValues(){
+  els.sizeInput.value = state.fontSize;
+  els.sizeVal.textContent = state.fontSize;
+  updateSliderFill(els.sizeInput);
+
+  els.xInput.value = Math.round(state.x);
+  els.xVal.textContent = Math.round(state.x);
+  updateSliderFill(els.xInput);
+
+  els.yInput.value = Math.round(state.y);
+  els.yVal.textContent = Math.round(state.y);
+  updateSliderFill(els.yInput);
+
+  els.fontSelect.value = state.fontFamily;
+
+  els.strokeWidthInput.value = state.strokeWidth;
+  els.strokeWidthVal.textContent = state.strokeWidth;
+  updateSliderFill(els.strokeWidthInput);
+  els.strokeColorInput.value = state.strokeColor;
+
+  els.shadowStrengthInput.value = state.shadowStrength;
+  els.shadowStrengthVal.textContent = state.shadowStrength;
+  updateSliderFill(els.shadowStrengthInput);
+  els.shadowColorInput.value = state.shadowColor;
+}
+
+[els.sizeInput, els.xInput, els.yInput, els.strokeWidthInput, els.shadowStrengthInput].forEach(updateSliderFill);
+
+els.textInput.addEventListener('input', ()=>{
+  state.text = els.textInput.value;
+  const len = state.text.length;
+  state.colorRanges = state.colorRanges
+    .map(r => ({ start: Math.min(r.start, len), end: Math.min(r.end, len), color: r.color }))
+    .filter(r => r.end > r.start);
+  draw();
+});
+
+els.sizeInput.addEventListener('input', ()=>{
+  state.fontSize = Number(els.sizeInput.value);
+  els.sizeVal.textContent = state.fontSize;
+  updateSliderFill(els.sizeInput);
+  draw();
+});
+
+els.xInput.addEventListener('input', ()=>{
+  state.x = Number(els.xInput.value);
+  els.xVal.textContent = state.x;
+  updateSliderFill(els.xInput);
+  draw();
+});
+
+els.yInput.addEventListener('input', ()=>{
+  state.y = Number(els.yInput.value);
+  els.yVal.textContent = state.y;
+  updateSliderFill(els.yInput);
+  draw();
+});
+
+els.fontSelect.addEventListener('change', ()=>{
+  state.fontFamily = els.fontSelect.value;
+  draw();
+});
+
+els.strokeWidthInput.addEventListener('input', ()=>{
+  state.strokeWidth = Number(els.strokeWidthInput.value);
+  els.strokeWidthVal.textContent = state.strokeWidth;
+  updateSliderFill(els.strokeWidthInput);
+  draw();
+});
+
+els.strokeColorInput.addEventListener('input', ()=>{
+  const v = hexToRgb(els.strokeColorInput.value);
+  if(!v){ els.strokeColorInput.value = state.strokeColor; return; } // 잘못된 값이면 이전 값 유지
+  state.strokeColor = els.strokeColorInput.value;
+  draw();
+});
+
+els.shadowStrengthInput.addEventListener('input', ()=>{
+  state.shadowStrength = Number(els.shadowStrengthInput.value);
+  els.shadowStrengthVal.textContent = state.shadowStrength;
+  updateSliderFill(els.shadowStrengthInput);
+  draw();
+});
+
+els.shadowColorInput.addEventListener('input', ()=>{
+  const v = hexToRgb(els.shadowColorInput.value);
+  if(!v){ els.shadowColorInput.value = state.shadowColor; return; } // 잘못된 값이면 이전 값 유지
+  state.shadowColor = els.shadowColorInput.value;
+  draw();
+});
+
+function hexToRgb(hex){
+  const m = hex.replace('#','');
+  const v = m.length === 3 ? m.split('').map(c=>c+c).join('') : m;
+  const num = parseInt(v, 16);
+  if(v.length !== 6 || isNaN(num)) return null;
+  return { r:(num>>16)&255, g:(num>>8)&255, b:num&255 };
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(n=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0')).join('');
+}
+function rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  const max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min;
+  let h=0;
+  if(d !== 0){
+    switch(max){
+      case r: h=((g-b)/d)%6; break;
+      case g: h=(b-r)/d+2; break;
+      case b: h=(r-g)/d+4; break;
+    }
+    h *= 60;
+    if(h<0) h+=360;
+  }
+  const s = max===0 ? 0 : d/max;
+  const v = max;
+  return { h, s:s*100, v:v*100 };
+}
+function hsvToRgb(h,s,v){
+  s/=100; v/=100;
+  const c = v*s;
+  const x = c*(1-Math.abs((h/60)%2-1));
+  const m = v-c;
+  let r=0,g=0,b=0;
+  if(h<60){ r=c; g=x; } else if(h<120){ r=x; g=c; } else if(h<180){ g=c; b=x; }
+  else if(h<240){ g=x; b=c; } else if(h<300){ r=x; b=c; } else { r=c; b=x; }
+  return { r:Math.round((r+m)*255), g:Math.round((g+m)*255), b:Math.round((b+m)*255) };
+}
+
+const hsv = { h:0, s:0, v:100 };
+const svCtx = els.svCanvas.getContext('2d');
+
+function drawSvSquare(){
+  const w = els.svCanvas.width, h = els.svCanvas.height;
+  const hueRgb = hsvToRgb(hsv.h, 100, 100);
+  svCtx.fillStyle = `rgb(${hueRgb.r},${hueRgb.g},${hueRgb.b})`;
+  svCtx.fillRect(0,0,w,h);
+
+  const whiteGrad = svCtx.createLinearGradient(0,0,w,0);
+  whiteGrad.addColorStop(0,'rgba(255,255,255,1)');
+  whiteGrad.addColorStop(1,'rgba(255,255,255,0)');
+  svCtx.fillStyle = whiteGrad;
+  svCtx.fillRect(0,0,w,h);
+
+  const blackGrad = svCtx.createLinearGradient(0,0,0,h);
+  blackGrad.addColorStop(0,'rgba(0,0,0,0)');
+  blackGrad.addColorStop(1,'rgba(0,0,0,1)');
+  svCtx.fillStyle = blackGrad;
+  svCtx.fillRect(0,0,w,h);
+
+  const px = (hsv.s/100) * w;
+  const py = (1 - hsv.v/100) * h;
+  svCtx.beginPath();
+  svCtx.arc(px, py, 7, 0, Math.PI*2);
+  svCtx.strokeStyle = '#ffffff';
+  svCtx.lineWidth = 2;
+  svCtx.stroke();
+  svCtx.beginPath();
+  svCtx.arc(px, py, 7, 0, Math.PI*2);
+  svCtx.strokeStyle = 'rgba(0,0,0,0.35)';
+  svCtx.lineWidth = 1;
+  svCtx.stroke();
+}
+
+// Updates the picker UI (swatch/hex/rgb/hue/sv square) to reflect a color,
+// without touching state.color or state.colorRanges or redrawing the canvas.
+function syncPickerFields(hex, source){
+  const rgb = hexToRgb(hex);
+  if(!rgb) return null;
+  const normalized = rgbToHex(rgb.r, rgb.g, rgb.b);
+  els.colorSwatch.style.background = normalized;
+  if(source !== 'hex') els.hexInput.value = normalized;
+  if(source !== 'rgb'){ els.rInput.value = rgb.r; els.gInput.value = rgb.g; els.bInput.value = rgb.b; }
+  if(source !== 'sv' && source !== 'hue'){
+    const newHsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    hsv.h = newHsv.h; hsv.s = newHsv.s; hsv.v = newHsv.v;
+    els.hueInput.value = hsv.h;
+  }
+  drawSvSquare();
+  return normalized;
+}
+
+// Merges a new color into state.colorRanges for [start,end), replacing/
+// trimming any ranges it overlaps.
+function setRangeColor(start, end, color){
+  const merged = [];
+  for(const r of state.colorRanges){
+    if(r.end <= start || r.start >= end){
+      merged.push(r);
+    } else {
+      if(r.start < start) merged.push({start:r.start, end:start, color:r.color});
+      if(r.end > end) merged.push({start:end, end:r.end, color:r.color});
+    }
+  }
+  merged.push({start, end, color});
+  merged.sort((a,b)=> a.start - b.start);
+  state.colorRanges = merged;
+}
+
+// Applies a picked color: to the current text selection if one exists
+// (captured when the color swatch was opened), otherwise to the whole text.
+function applyPickedColor(hex, source){
+  const normalized = syncPickerFields(hex, source);
+  if(!normalized) return;
+  if(pendingSelection && pendingSelection.end > pendingSelection.start){
+    setRangeColor(pendingSelection.start, pendingSelection.end, normalized);
+  } else {
+    state.color = normalized;
+    state.colorRanges = [];
+  }
+  draw();
+}
+
+// Sets the base color without touching selection ranges — used on init and
+// when loading a template, where colorRanges are restored separately.
+function setBaseColorSilently(hex){
+  const normalized = syncPickerFields(hex, null);
+  if(normalized) state.color = normalized;
+  draw();
+}
+
+function applyHsvColor(source){
+  const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+  applyPickedColor(rgbToHex(rgb.r, rgb.g, rgb.b), source);
+}
+
+let pendingSelection = null;
+
+function initColorPicker(){
+  els.colorPanel.hidden = true;
+  setBaseColorSilently(state.color);
+
+  els.colorSwatch.addEventListener('mousedown', ()=>{
+    pendingSelection = { start: els.textInput.selectionStart, end: els.textInput.selectionEnd };
+  });
+  els.colorSwatch.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    els.colorPanel.hidden = !els.colorPanel.hidden;
+    if(!els.colorPanel.hidden) drawSvSquare();
+  });
+
+  els.colorPanel.addEventListener('click', (e)=>{
+    e.stopPropagation();
+  });
+
+  document.addEventListener('click', ()=>{
+    if(!els.colorPanel.hidden){
+      els.colorPanel.hidden = true;
+    }
+  });
+
+  let svDragging = false;
+  function updateSvFromEvent(e){
+    const rect = els.svCanvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+    hsv.s = (x/rect.width) * 100;
+    hsv.v = (1 - y/rect.height) * 100;
+    applyHsvColor('sv');
+  }
+  els.svCanvas.addEventListener('mousedown', (e)=>{ svDragging = true; updateSvFromEvent(e); });
+  els.svCanvas.addEventListener('touchstart', (e)=>{ svDragging = true; updateSvFromEvent(e); });
+  window.addEventListener('mousemove', (e)=>{ if(svDragging) updateSvFromEvent(e); });
+  window.addEventListener('touchmove', (e)=>{ if(svDragging){ e.preventDefault(); updateSvFromEvent(e); } }, {passive:false});
+  window.addEventListener('mouseup', ()=>{ svDragging = false; });
+  window.addEventListener('touchend', ()=>{ svDragging = false; });
+
+  els.hueInput.addEventListener('input', ()=>{
+    hsv.h = Number(els.hueInput.value);
+    applyHsvColor('hue');
+  });
+
+  els.hexInput.addEventListener('change', ()=>{
+    let v = els.hexInput.value.trim();
+    if(!v.startsWith('#')) v = '#' + v;
+    if(hexToRgb(v)) applyPickedColor(v, 'hex');
+    else els.hexInput.value = state.color;
+  });
+
+  const onRgbChange = ()=>{
+    const r = Number(els.rInput.value)||0, g=Number(els.gInput.value)||0, b=Number(els.bInput.value)||0;
+    applyPickedColor(rgbToHex(r,g,b), 'rgb');
+  };
+  [els.rInput, els.gInput, els.bInput].forEach(inp=> inp.addEventListener('input', onRgbChange));
+}
+initColorPicker();
+
+// drag text on canvas
+let dragging = false;
+function pointerPos(e){
+  const rect = canvas.getBoundingClientRect();
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {
+    x: ((clientX - rect.left) / rect.width) * 100,
+    y: ((clientY - rect.top) / rect.height) * 100,
+  };
+}
+canvas.addEventListener('mousedown', (e)=>{ dragging = true; });
+canvas.addEventListener('touchstart', (e)=>{ dragging = true; });
+window.addEventListener('mousemove', (e)=>{
+  if(!dragging) return;
+  const p = pointerPos(e);
+  state.x = Math.max(0, Math.min(100, p.x));
+  state.y = Math.max(0, Math.min(100, p.y));
+  updateUIValues();
+  draw();
+});
+window.addEventListener('touchmove', (e)=>{
+  if(!dragging) return;
+  const p = pointerPos(e);
+  state.x = Math.max(0, Math.min(100, p.x));
+  state.y = Math.max(0, Math.min(100, p.y));
+  updateUIValues();
+  draw();
+});
+window.addEventListener('mouseup', ()=>{ dragging=false; });
+window.addEventListener('touchend', ()=>{ dragging=false; });
+
+// ---------- file loading ----------
+
+function handleFile(file){
+  if(!file) return;
+  const validTypes = ['image/png','image/jpeg'];
+  if(!validTypes.includes(file.type)){
+    showMsg(els.stageMsg, `지원하지 않는 파일 형식입니다 (${file.type || '알 수 없음'}). 기존 작업은 유지됩니다. PNG 또는 JPEG만 가능합니다.`, 'err');
+    els.fileInput.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const dataUrl = ev.target.result;
+    const img = new Image();
+    img.onload = ()=>{
+      state.img = img;
+      state.imgDataURL = dataUrl;
+      draw();
+      showMsg(els.stageMsg, '이미지를 불러왔습니다.', 'ok');
+    };
+    img.onerror = ()=>{
+      showMsg(els.stageMsg, '이미지를 여는 데 실패했습니다. 기존 작업은 유지됩니다.', 'err');
+    };
+    img.src = dataUrl;
+  };
+  reader.onerror = ()=>{
+    showMsg(els.stageMsg, '파일을 읽는 데 실패했습니다.', 'err');
+  };
+  reader.readAsDataURL(file);
+}
+
+els.uploadBtn.addEventListener('click', ()=> els.fileInput.click());
+
+els.fileInput.addEventListener('change', ()=>{
+  handleFile(els.fileInput.files[0]);
+});
+
+['dragenter','dragover'].forEach(evt=>{
+  els.dropzone.addEventListener(evt, (e)=>{
+    e.preventDefault();
+    els.dropzone.classList.add('drag-over');
+  });
+});
+['dragleave','drop'].forEach(evt=>{
+  els.dropzone.addEventListener(evt, (e)=>{
+    e.preventDefault();
+    els.dropzone.classList.remove('drag-over');
+  });
+});
+els.dropzone.addEventListener('drop', (e)=>{
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  handleFile(file);
+});
+
+// ---------- download ----------
+
+els.downloadBtn.addEventListener('click', ()=>{
+  const link = document.createElement('a');
+  link.download = `card-${state.ratio.replace(':','x')}-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+});
+
+// ---------- templates (persistent storage) ----------
+
+// Templates store a copy of the image separately from the working canvas.
+// Downscaling it before saving keeps storage usage (localStorage is only a
+// few MB) from filling up after saving a handful of templates from
+// full-resolution photos. PNG is kept (not JPEG) so transparency survives.
+function compressImageForTemplate(dataURL, maxDim){
+  return new Promise((resolve)=>{
+    if(!dataURL){ resolve(null); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w >= h){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(img, 0, 0, w, h);
+      try{
+        resolve(c.toDataURL('image/png'));
+      }catch(e){
+        resolve(dataURL);
+      }
+    };
+    img.onerror = ()=> resolve(dataURL);
+    img.src = dataURL;
+  });
+}
+
+function currentAsTemplate(name, id){
+  return {
+    id: id || ('tpl_' + Date.now() + '_' + Math.random().toString(36).slice(2,7)),
+    name,
+    ratio: state.ratio,
+    text: state.text,
+    fontSize: state.fontSize,
+    x: state.x,
+    y: state.y,
+    color: state.color,
+    colorRanges: state.colorRanges,
+    fontFamily: state.fontFamily,
+    strokeColor: state.strokeColor,
+    strokeWidth: state.strokeWidth,
+    shadowColor: state.shadowColor,
+    shadowStrength: state.shadowStrength,
+    imgDataURL: state.imgDataURL,
+    updatedAt: Date.now(),
+  };
+}
+
+function isValidTemplate(t){
+  if(!t || typeof t !== 'object') return false;
+  const requiredStrings = ['id','name','ratio','color'];
+  for(const k of requiredStrings){ if(typeof t[k] !== 'string' || t[k].length === 0) return false; }
+  if(!RATIOS[t.ratio]) return false;
+  if(typeof t.text !== 'string') return false;
+  if(typeof t.fontSize !== 'number') return false;
+  if(typeof t.x !== 'number' || typeof t.y !== 'number') return false;
+  return true;
+}
+
+async function listTemplates(){
+  try{
+    const res = await storage.list('template:', false);
+    if(!res || !res.keys) return [];
+    const items = [];
+    for(const key of res.keys){
+      try{
+        const r = await storage.get(key, false);
+        if(r && r.value){
+          const parsed = JSON.parse(r.value);
+          if(isValidTemplate(parsed)) items.push(parsed);
+        }
+      }catch(e){ /* skip unreadable key */ }
+    }
+    items.sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+    return items;
+  }catch(e){
+    return [];
+  }
+}
+
+let editingTplId = null;
+
+function setCurrentTplLabel(name){
+  els.currentTplLabel.textContent = name ? `현재 선택된 템플릿: ${name}` : '';
+}
+
+function syncSaveBtnState(){
+  const editing = editingTplId !== null;
+  els.saveTplBtn.disabled = editing;
+  els.saveTplBtn.title = editing ? '수정 중에는 "수정 저장" 버튼을 사용하세요.' : '';
+}
+
+async function renderTplList(){
+  syncSaveBtnState();
+  const items = await listTemplates();
+  if(items.length === 0){
+    els.tplList.innerHTML = '<div class="tpl-empty">저장된 템플릿이 없습니다</div>';
+    return;
+  }
+  els.tplList.innerHTML = '';
+  for(const t of items){
+    const isEditing = t.id === editingTplId;
+    const row = document.createElement('div');
+    row.className = 'tpl-item';
+    row.innerHTML = `
+      <img class="tpl-thumb" src="${t.imgDataURL || ''}" onerror="this.style.visibility='hidden'">
+      <div class="tpl-name">${escapeHtml(t.name)}</div>
+      <button class="btn small" data-act="load">불러오기</button>
+      <button class="btn small" data-act="update">${isEditing ? '수정 저장' : '수정하기'}</button>
+      <button class="btn small" data-act="delete">삭제</button>
+    `;
+    row.querySelector('[data-act="load"]').addEventListener('click', ()=> loadTemplate(t));
+    row.querySelector('[data-act="update"]').addEventListener('click', ()=>{
+      if(editingTplId === t.id){
+        commitEdit(t.id, t.name);
+      } else {
+        enterEditMode(t);
+      }
+    });
+    row.querySelector('[data-act="delete"]').addEventListener('click', ()=> deleteTemplate(t.id));
+    els.tplList.appendChild(row);
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function applyTemplateToForm(t){
+  state.ratio = t.ratio;
+  state.text = t.text;
+  state.fontSize = t.fontSize;
+  state.x = t.x;
+  state.y = t.y;
+  state.color = t.color;
+  state.colorRanges = Array.isArray(t.colorRanges) ? t.colorRanges : [];
+  // 구버전 템플릿(텍스트 스타일 필드가 없는)은 기본값으로 채움
+  state.fontFamily = t.fontFamily || TEXT_STYLE_DEFAULTS.fontFamily;
+  state.strokeColor = t.strokeColor || TEXT_STYLE_DEFAULTS.strokeColor;
+  state.strokeWidth = typeof t.strokeWidth === 'number' ? t.strokeWidth : TEXT_STYLE_DEFAULTS.strokeWidth;
+  state.shadowColor = t.shadowColor || TEXT_STYLE_DEFAULTS.shadowColor;
+  state.shadowStrength = typeof t.shadowStrength === 'number' ? t.shadowStrength : TEXT_STYLE_DEFAULTS.shadowStrength;
+  state.imgDataURL = t.imgDataURL || null;
+
+  els.textInput.value = state.text;
+  updateUIValues();
+  setBaseColorSilently(state.color);
+  [...els.ratioTabs.children].forEach(b=>{
+    b.classList.toggle('active', b.dataset.ratio === state.ratio);
+  });
+
+  if(state.imgDataURL){
+    const img = new Image();
+    img.onload = ()=>{ state.img = img; draw(); };
+    img.src = state.imgDataURL;
+  } else {
+    state.img = null;
+    draw();
+  }
+  els.tplNameInput.value = t.name;
+}
+
+function loadTemplate(t){
+  applyTemplateToForm(t);
+  editingTplId = null;
+  setCurrentTplLabel(t.name);
+  showMsg(els.tplActionMsg, `"${t.name}" 템플릿을 불러왔습니다.`, 'ok');
+  renderTplList();
+}
+
+function enterEditMode(t){
+  applyTemplateToForm(t);
+  editingTplId = t.id;
+  setCurrentTplLabel(t.name);
+  showMsg(els.tplActionMsg, `"${t.name}" 템플릿을 수정 중입니다. 값을 바꾼 뒤 "수정 저장"을 눌러주세요.`, 'ok');
+  renderTplList();
+}
+
+async function saveNewTemplate(){
+  const name = els.tplNameInput.value.trim();
+  if(!name){
+    showMsg(els.tplActionMsg, '템플릿 이름을 입력해주세요.', 'err');
+    return;
+  }
+  const tpl = currentAsTemplate(name);
+  tpl.imgDataURL = await compressImageForTemplate(state.imgDataURL, 900);
+  try{
+    await storage.set('template:' + tpl.id, JSON.stringify(tpl), false);
+    showMsg(els.tplActionMsg, `"${name}" 템플릿을 저장했습니다.`, 'ok');
+    els.tplNameInput.value = '';
+    renderTplList();
+  }catch(e){
+    showMsg(els.tplActionMsg, '저장 공간이 부족해서 템플릿을 저장하지 못했어요. 아래 목록에서 필요 없는 템플릿을 몇 개 삭제한 뒤 다시 시도해주세요.', 'err');
+  }
+}
+
+async function commitEdit(id, oldName){
+  const name = els.tplNameInput.value.trim() || oldName;
+  const tpl = currentAsTemplate(name, id);
+  tpl.imgDataURL = await compressImageForTemplate(state.imgDataURL, 900);
+  try{
+    await storage.set('template:' + id, JSON.stringify(tpl), false);
+    showMsg(els.tplActionMsg, `"${name}" 템플릿을 수정 저장했습니다.`, 'ok');
+    editingTplId = null;
+    setCurrentTplLabel(name);
+    renderTplList();
+  }catch(e){
+    showMsg(els.tplActionMsg, '저장 공간이 부족해서 수정 내용을 저장하지 못했어요. 템플릿을 몇 개 삭제한 뒤 다시 시도해주세요.', 'err');
+  }
+}
+
+async function deleteTemplate(id){
+  try{
+    await storage.delete('template:' + id, false);
+  }catch(e){
+    showMsg(els.tplActionMsg, '템플릿 삭제 중 오류가 발생했습니다.', 'err');
+    return;
+  }
+  if(editingTplId === id){
+    editingTplId = null;
+    setCurrentTplLabel('');
+  }
+  showMsg(els.tplActionMsg, '템플릿을 삭제했습니다.', 'ok');
+  renderTplList();
+}
+
+els.saveTplBtn.addEventListener('click', saveNewTemplate);
+
+// ---------- JSON export / import ----------
+
+els.exportJsonBtn.addEventListener('click', async ()=>{
+  const items = await listTemplates();
+  const blob = new Blob([JSON.stringify(items, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = `templates-${Date.now()}.json`;
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+  showMsg(els.tplMsg, `템플릿 ${items.length}개를 내보냈습니다.`, 'ok');
+});
+
+els.importJsonInput.addEventListener('change', async ()=>{
+  const file = els.importJsonInput.files[0];
+  if(!file) return;
+  const text = await file.text();
+  let parsed;
+  try{
+    parsed = JSON.parse(text);
+  }catch(e){
+    showMsg(els.tplMsg, 'JSON 문법이 손상되어 가져오기를 취소했습니다. 기존 템플릿은 유지됩니다.', 'err');
+    els.importJsonInput.value = false;
+    return;
+  }
+  if(!Array.isArray(parsed)){
+    showMsg(els.tplMsg, 'JSON 형식이 올바르지 않습니다(배열이 아님). 기존 템플릿은 유지됩니다.', 'err');
+    els.importJsonInput.value = '';
+    return;
+  }
+  const invalid = parsed.filter(t => !isValidTemplate(t));
+  if(invalid.length > 0){
+    showMsg(els.tplMsg, `필수 항목이 빠진 템플릿이 ${invalid.length}개 있어 가져오기를 취소했습니다. 기존 템플릿은 유지됩니다.`, 'err');
+    els.importJsonInput.value = '';
+    return;
+  }
+  let savedCount = 0;
+  try{
+    for(const t of parsed){
+      await storage.set('template:' + t.id, JSON.stringify(t), false);
+      savedCount++;
+    }
+    showMsg(els.tplMsg, `템플릿 ${parsed.length}개를 복원했습니다.`, 'ok');
+  }catch(e){
+    showMsg(els.tplMsg, `저장 공간이 부족해서 ${savedCount}개만 복원되고 나머지는 실패했습니다. 템플릿을 몇 개 삭제한 뒤 다시 시도해주세요.`, 'err');
+  }
+  els.importJsonInput.value = '';
+  renderTplList();
+});
+
+// ---------- init ----------
+draw();
+renderTplList();
+</script>
+</body>
+</html>

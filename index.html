@@ -385,6 +385,39 @@
     color:var(--muted);
     padding:24px;
   }
+  .rep-cta-bar{
+    max-width:1080px;
+    margin:0 auto 16px;
+    padding:0 20px;
+    display:flex;
+    justify-content:center;
+  }
+  .rep-cta-btn{
+    width:100%;
+    max-width:460px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:0.2px;
+    color:#ffffff;
+    padding:13px 20px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+    background:linear-gradient(135deg,#7b2ff7,#f107a3);
+    box-shadow:0 6px 18px rgba(123,47,247,0.35);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .rep-cta-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 8px 22px rgba(123,47,247,0.45);
+  }
+  .rep-cta-btn:active{transform:translateY(0);}
+  .rep-cta-btn__icon{font-size:16px; line-height:1;}
 </style>
 </head>
 <body>
@@ -393,6 +426,13 @@
   <h1>짤·카드 스튜디오</h1>
   <p>이미지와 문구를 조합해 밈·카드·SNS 이미지를 만들고 내려받으세요.</p>
 </header>
+
+<div class="rep-cta-bar">
+  <button class="rep-cta-btn" id="openReportBtn">
+    <span class="rep-cta-btn__icon">📊</span>
+    <span>과제5 비교 보고서 보기</span>
+  </button>
+</div>
 
 <div class="layout">
 
@@ -520,6 +560,102 @@
 </div>
 
 <footer>메타데이터·위치정보는 저장하지 않으며, 모든 편집은 이 브라우저 세션의 저장소에만 보관됩니다.</footer>
+
+<style>
+  /* 아래 .rep- 접두사가 붙은 규칙은 비교 보고서 전용 스코프 스타일이며
+     앱 본체의 스타일(.card, .btn 등)과 섞이지 않도록 별도 네임스페이스를 씀 */
+  .rep-scope{
+    --rep-card:#ffffff; --rep-ink:#1c1c1c; --rep-sub:#6b6b6b;
+    --rep-line:#e6e3dc; --rep-accent:#2f6f4f; --rep-accent-bg:#eaf3ee;
+    display:none;
+    max-width:820px; margin:0 auto 24px; padding:0 20px;
+  }
+  .rep-scope.is-open{ display:block; }
+  .rep-scope .rep-card{
+    background:var(--rep-card); border:1px solid var(--rep-line); border-radius:14px;
+    padding:20px; margin-bottom:16px; color:var(--rep-ink);
+  }
+  .rep-scope h1.rep-title{font-size:1.3rem; margin:8px 0 4px; color:var(--rep-ink);}
+  .rep-scope p.rep-sub{color:var(--rep-sub); font-size:0.88rem; margin:0 0 20px;}
+  .rep-scope h2.rep-h2{font-size:1rem; margin:0 0 12px; display:flex; align-items:center; gap:8px; color:var(--rep-ink);}
+  .rep-scope h2.rep-h2 .rep-n{
+    width:20px; height:20px; border-radius:50%; background:var(--rep-accent-bg);
+    color:var(--rep-accent); font-size:0.75rem; display:inline-flex; align-items:center;
+    justify-content:center; font-weight:700; flex:none;
+  }
+  .rep-scope table{width:100%; border-collapse:collapse; font-size:0.86rem;}
+  .rep-scope th, .rep-scope td{text-align:left; padding:8px 6px; border-bottom:1px solid var(--rep-line); color:var(--rep-ink);}
+  .rep-scope th{color:var(--rep-sub); font-weight:600; font-size:0.78rem;}
+  .rep-scope .rep-steps{margin:0; padding-left:0; list-style:none; counter-reset:step;}
+  .rep-scope .rep-steps li{
+    counter-increment:step; position:relative; padding-left:32px; margin-bottom:10px; font-size:0.88rem;
+  }
+  .rep-scope .rep-steps li::before{
+    content:counter(step); position:absolute; left:0; top:-1px;
+    width:20px; height:20px; border-radius:6px; background:var(--rep-accent-bg);
+    color:var(--rep-accent); font-size:0.75rem; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .rep-scope dt{font-weight:700; margin-top:12px; font-size:0.84rem; color:var(--rep-sub);}
+  .rep-scope dd{margin:4px 0 0; font-size:0.9rem; color:var(--rep-ink);}
+  .rep-scope .rep-criterion{
+    background:var(--rep-accent-bg); color:var(--rep-accent); border-radius:10px;
+    padding:12px 14px; font-size:0.9rem; font-weight:600;
+  }
+  .rep-scope a{color:var(--rep-accent);}
+  .rep-scope .rep-note{font-size:0.78rem; color:var(--rep-sub); margin-top:8px;}
+  .rep-scope .rep-foot{text-align:center; color:var(--rep-sub); font-size:0.78rem; margin-top:6px;}
+</style>
+
+<div id="reportPanel" class="rep-scope">
+  <h1 class="rep-title">과제5 — 대화가 끊겨도 이어지는 프로젝트</h1>
+  <p class="rep-sub">짤·카드 스튜디오 텍스트 스타일 옵션(폰트 · 외곽선 · 그림자) 추가 · AI A → AI B 인수인계 비교 보고서</p>
+
+  <div class="rep-card">
+    <h2 class="rep-h2"><span class="rep-n">1</span>이름을 가린 비교표</h2>
+    <table>
+      <tr><th></th><th>AI 1</th><th>AI 2</th></tr>
+      <tr><td>작업 시간</td><td>1시간 이상</td><td>30분 이내</td></tr>
+      <tr><td>요청·호출 수</td><td>약 10회</td><td>6회 이상</td></tr>
+      <tr><td>오류 회차 수</td><td>1회 (FAIL 포함 실행)</td><td>0회</td></tr>
+      <tr><td>검사 통과 수 (10개 중)</td><td>8 / 10</td><td>10 / 10</td></tr>
+    </table>
+    <p class="rep-note">재작업량(추가/삭제 줄 수)은 여기서 직접 계산하지 않음 — 아래 "전체 작업 기록"의 시작·종료 소스 버전 쌍으로 제출 후 채점기가 산출.</p>
+  </div>
+
+  <div class="rep-card">
+    <h2 class="rep-h2"><span class="rep-n">2</span>전체 작업 기록 (A 시작 → A 인계 → B 시작 → B 완료)</h2>
+    <table>
+      <tr><th>단계</th><th>소스 버전(커밋)</th></tr>
+      <tr><td>AI 1 시작</td><td><code>fe8df52f742ea7ee31aac34150e58319de4f9b36</code></td></tr>
+      <tr><td>AI 1 종료 · 인수인계</td><td><code>6d55c3dfe26567754475d800980156b6d6f677c8</code></td></tr>
+      <tr><td>AI 2 시작</td><td><code>6d55c3dfe26567754475d800980156b6d6f677c8</code> (AI 1과 동일 지점)</td></tr>
+      <tr><td>AI 2 종료</td><td><code>383e1579dc5917d89dfa7d9d6e480305357e8ce2</code></td></tr>
+    </table>
+    <p class="rep-note">저장소: <a href="https://github.com/stujh00/my-ai-handover" target="_blank">github.com/stujh00/my-ai-handover</a></p>
+  </div>
+
+  <div class="rep-card">
+    <h2 class="rep-h2"><span class="rep-n">3</span>다음 작업의 도구 선택 기준</h2>
+    <div class="rep-criterion">코드를 처음부터 새로 짜는 작업은 AI 1에게, 이미 있는 코드의 특정 결함 하나를 좁게 고치는 작업은 AI 2에게 맡긴다.</div>
+  </div>
+
+  <p class="rep-foot">과제5 제출용 공개 보고서 · 로그인 불필요</p>
+</div>
+
+<script>
+(function(){
+  const btn = document.getElementById('openReportBtn');
+  const btnLabel = btn ? btn.querySelector('span:last-child') : null;
+  const panel = document.getElementById('reportPanel');
+  if(!btn || !panel) return;
+  btn.addEventListener('click', ()=>{
+    const open = panel.classList.toggle('is-open');
+    if(btnLabel) btnLabel.textContent = open ? '비교 보고서 닫기' : '과제5 비교 보고서 보기';
+    if(open) panel.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+})();
+</script>
 
 <script>
 // window.storage is only injected inside the Claude.ai artifact preview.

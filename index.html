@@ -816,11 +816,21 @@ function draw(){
     ctx.textAlign = 'left';
     const leftX = cx - blockWidth/2; // same left edge for every line
 
-    // TODO(카드4에서 AI B가 완성할 부분): 그림자(shadow) 효과는 아직 실제
-    // 캔버스 렌더링에 연결되지 않음. state.shadowColor / state.shadowStrength
-    // 값은 정상적으로 저장·복원되지만, 여기서 ctx.shadowColor 등을 설정하는
-    // 코드가 빠져있어 화면/PNG에는 그림자가 나타나지 않는다.
-    // (외곽선(stroke)은 완성되어 정상 동작함)
+    // 그림자 설정
+    // shadowStrength를 캔버스 좌표계에 맞게 스케일링하고,
+    // 텍스트 stroke/fill 모두에 동일하게 적용한다.
+    if(state.shadowStrength > 0){
+      const shadow = state.shadowStrength * (w/1080);
+      ctx.shadowColor = state.shadowColor;
+      ctx.shadowBlur = shadow;
+      ctx.shadowOffsetX = shadow;
+      ctx.shadowOffsetY = shadow;
+    } else {
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
 
     if(state.strokeWidth > 0){
       ctx.lineJoin = 'round';
@@ -844,6 +854,12 @@ function draw(){
       });
       cy += lineHeight;
     }
+
+    // 이후 캔버스 렌더링에 그림자가 남지 않도록 상태 초기화
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
   }
 }
 
